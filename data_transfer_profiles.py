@@ -3,7 +3,16 @@ import sql_connection as sql_c
 
 
 def create_profile_query(profile):
-    """"""
+    """
+    Takes profile-data (dict) as input.
+    Selects the following data from the profile:
+    - profile id
+    - created data
+    - first order
+    - the latest order
+    - the latest activity
+    Creates an sql query to insert this data into the profile table and returns this query.
+    """
     sql_query_qp = 'INSERT INTO profiles (profile__id)'
     sql_query_vp = ' VALUES (%s)'
 
@@ -33,7 +42,10 @@ def create_profile_query(profile):
 
 
 def create_buid_query(profile_id, buid):
-    """"""
+    """
+    Takes a profile_id (str) and a buid (str) as input.
+    Creates an sql query to insert this data in the buid table and returns this query.
+    """
     sql_query = """INSERT INTO buid (buid, profile__id) 
     VALUES (%s, %s) ON CONFLICT ON CONSTRAINT c_b_pk DO NOTHING;"""
 
@@ -41,7 +53,17 @@ def create_buid_query(profile_id, buid):
 
 
 def create_recommendation_query(profile, recommendation_id):
-    """"""
+    """
+    Takes profile_data (dict) and a recommendation_id (str) as input.
+    Selects the following data from the profile:
+    - profile_id
+    - recommendation time
+    - segment
+    - last visit
+    - total pageviewcount
+    - total viewed count
+    Creates an sql query to insert this data in the recommendation table and returns this query.
+    """
     sql_query = """INSERT INTO recommendations (recommendation_id, profile__id, recommendation_time, segment, 
     last_visit, total_pageview_count, total_viewed_count) 
     VALUES (%s, %s, %s, %s, %s, %s, %s);"""
@@ -59,7 +81,10 @@ def create_recommendation_query(profile, recommendation_id):
 
 
 def create_recommendation_product_query(recommendation_id, product__id, recommendation_type):
-    """"""
+    """
+    Takes a recommendation_id (int) and, product__id (str) and a recommendation_type (str) as input.
+    Creates an sql query to insert this data in the recommendation_products table and returns this query.
+    """
     # source where exists/for share clause: Erwin Brandstetter
     # https://dba.stackexchange.com/questions/252875/how-to-make-on-conflict-work-for-compound-foreign-key-columns
     sql_query = """INSERT INTO recommendation_products (recommendation_id, product__id, recommendation_type)
@@ -76,7 +101,15 @@ def create_recommendation_product_query(recommendation_id, product__id, recommen
 
 
 def upload_profile(sql_cursor, profile):
-    """"""
+    """
+    Takes an active sql_cursor and profile-data (dict) as input.
+    Creates several sql queries to upload the profile data to the following sql tables:
+    - profiles
+    - buid
+    - recommendations (if present)
+    - recommendation_products (if present)
+    Executes the sql queries.
+    """
     print(profile['_id'])
     # skips profiles without associated buids.
     try:

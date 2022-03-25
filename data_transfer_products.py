@@ -12,7 +12,11 @@ def secure_value(value):
 
 
 def create_big_product_query(product):
-    """"""
+    """
+    Takes products data (dict) as input.
+    Scans the products for desired data and creates an sql query with this.
+    Returns the query.
+    """
     sql_query_ip = 'INSERT INTO  products ( '
 
     # field names that are different between mongodb and sql.
@@ -59,8 +63,9 @@ def create_big_product_query(product):
 
 def create_product_query(product):
     """
-    Takes information about a product (dict) as input. Constructs a sql query to insert this product with name, id and
-    price into a sql database. Returns the constructed sql query (str).
+    Takes information about a product (dict) as input.
+    Constructs a sql query to insert this product with name, id and price into a sql database.
+    Returns the constructed sql query (str).
     """
     sql_query = 'INSERT INTO products (product__id, product_name, selling_price) VALUES (%s, %s, %s)'
 
@@ -71,8 +76,8 @@ def create_product_query(product):
 
 def upload_product(product):
     """
-    Takes information about a product (dict) as input. Uploads the product to the local sql database. Uploads the
-    product id, the name and the price.
+    Takes information about a product (dict) as input.
+    Uploads the product to the local sql database.
     """
     connection, cursor = sql_c.connect()
     sql_query = create_big_product_query(product)
@@ -82,7 +87,7 @@ def upload_product(product):
 
 
 def upload_all_products():
-    """Loads all products from the local mongodb database."""
+    """Loads all products from the local mongodb database. Selects desired data and uploads that to an sql database."""
     database = mdb_c.connect_mdb()
     products_collection = database.products
     sql_connection, sql_cursor = sql_c.connect()
