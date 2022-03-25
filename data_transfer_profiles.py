@@ -28,7 +28,7 @@ def create_profile_query(profile):
         pass
 
     sql_query = sql_query_qp + sql_query_vp
-    print(sql_query, wanted_values)
+
     return sql_query, wanted_values
 
 
@@ -60,6 +60,8 @@ def create_recommendation_query(profile, recommendation_id):
 
 def create_recommendation_product_query(recommendation_id, product__id, recommendation_type):
     """"""
+    # source where exists/for share clause: Erwin Brandstetter
+    # https://dba.stackexchange.com/questions/252875/how-to-make-on-conflict-work-for-compound-foreign-key-columns
     sql_query = """INSERT INTO recommendation_products (recommendation_id, product__id, recommendation_type)
                    SELECT rp.*
                    FROM  (VALUES (%s, %s, %s)) rp(recommendation_id, product__id, recommendation_type)
@@ -73,9 +75,8 @@ def create_recommendation_product_query(recommendation_id, product__id, recommen
     return sql_query, (recommendation_id, str(product__id), recommendation_type)
 
 
-def upload_profile(profile):
+def upload_profile(sql_cursor, profile):
     """"""
-    sql_connection, sql_cursor = sql_c.connect()
     print(profile['_id'])
     # skips profiles without associated buids.
     try:
@@ -97,11 +98,12 @@ def upload_profile(profile):
     try:
         recommendation_data = profile['recommendations']
         # generates recommendation_id with the sql_sequence
-        sql_cursor.execute("""SELECT nextval('recommendation_seq')""")
+        sql_cursor.execute("""SELECT nextval('recommendations_recommendation_id_seq')""")
         recommendation_id = sql_cursor.fetchone()[0]
-
+        # creates entry for recommendation table
         recommendation_query, recommendation_values = create_recommendation_query(profile, recommendation_id)
         sql_cursor.execute(recommendation_query, recommendation_values)
+        # creates entries for recommended_products table
         for viewed_item in recommendation_data['viewed_before']:
             rp_query, rp_values = create_recommendation_product_query(recommendation_id, viewed_item, 'viewed')
             sql_cursor.execute(rp_query, rp_values)
@@ -109,10 +111,7 @@ def upload_profile(profile):
             rp_query, rp_values = create_recommendation_product_query(recommendation_id, similar_item, 'similar')
             sql_cursor.execute(rp_query, rp_values)
     except KeyError:
-        pass
-
-    sql_connection.commit()
-    sql_c.disconnect(sql_connection, sql_cursor)
+        return None
 
 
 def upload_all_profiles():
@@ -121,41 +120,9 @@ def upload_all_profiles():
     profile_collection = database.profiles
     sql_connection, sql_cursor = sql_c.connect()
 
-    for profile in list(profile_collection.find()):
-        print(profile['_id'])
-        # skips profiles without associated buids.
-        try:
-            buids = profile['buids']
-            if len(buids) == 0:
-                continue
-        except KeyError:
-            continue
-
-        # creates entry in profile table
-        profile_query, profile_values = create_profile_query(profile)
-        sql_cursor.execute(profile_query, profile_values)
-
-        # creates entries in buid table
-        for buid in buids:
-            buid_query, buid_values = create_buid_query(profile['_id'], buid)
-            sql_cursor.execute(buid_query, buid_values)
-      # creates entries in recommendation table and recommendation_product table if data is available.
-        try:
-            recommendation_data = profile['recommendations']
-            # generates recommendation_id with the sql_sequence
-            sql_cursor.execute("""SELECT nextval('recommendation_seq')""")
-            recommendation_id = sql_cursor.fetchone()[0]
-
-            recommendation_query, recommendation_values = create_recommendation_query(profile, recommendation_id)
-            sql_cursor.execute(recommendation_query, recommendation_values)
-            for viewed_item in recommendation_data['viewed_before']:
-                rp_query, rp_values = create_recommendation_product_query(recommendation_id, viewed_item, 'viewed')
-                sql_cursor.execute(rp_query, rp_values)
-            for similar_item in recommendation_data['similars']:
-                rp_query, rp_values = create_recommendation_product_query(recommendation_id, similar_item, 'similar')
-                sql_cursor.execute(rp_query, rp_values)
-        except KeyError:
-            continue
+    for profile in profile_collection.find():
+        profile = dict(profile)
+        upload_profile(sql_cursor, profile)
 
     sql_connection.commit()
     sql_c.disconnect(sql_connection, sql_cursor)

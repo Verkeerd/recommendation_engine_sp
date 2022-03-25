@@ -86,7 +86,8 @@ def upload_all_products():
     database = mdb_c.connect_mdb()
     products_collection = database.products
     sql_connection, sql_cursor = sql_c.connect()
-    for product in list(products_collection.find()):
+    for product in products_collection.find():
+        product = dict(product)
         sql_query, format_values = create_big_product_query(product)
         sql_cursor.execute(sql_query, format_values)
         print(sql_query, format_values)
