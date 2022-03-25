@@ -1,5 +1,4 @@
 import sql_connection as sql_c
-import general_support_algorithms as support
 
 
 def all_product_prices():
@@ -11,7 +10,7 @@ def all_product_prices():
     cursor.execute(sql_query)
     # The sql query returns a list with tuples containing the price. For each item in the list we select the first index
     # after that we are left with a list with all prices.
-    products = list(map(support.select_index, cursor.fetchall()))
+    products = [product[0] for product in cursor.fetchall()]
     sql_c.disconnect(connection, cursor)
 
     return list(products)
