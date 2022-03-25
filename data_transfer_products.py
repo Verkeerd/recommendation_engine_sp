@@ -15,8 +15,11 @@ def create_big_product_query(product):
     """"""
     sql_query_ip = 'INSERT INTO  products ( '
 
+    # field names that are different between mongodb and sql.
     bad_values = ['_id', 'name', 'type']
+    # wanted subdirectories
     cat_keys = ['price', 'properties']
+    # wanted fields
     wanted_keys = ['_id', 'brand', 'category', 'color', 'fast_mover', 'flavor', 'gender', 'herhaalaankopen',
             'name', 'selling_price', 'availability', 'discount', 'doelgroep', 'eenheid', 'factor', 'folder_actief',
             'gebruik', 'geschikt_voor', 'geursoort', 'huidconditie', 'huidtype', 'huidtypegezicht', 'inhoud', 'klacht',
@@ -27,12 +30,12 @@ def create_big_product_query(product):
     wanted_values = ()
 
     for key, value in product.items():
-        # check if the field is a wanted sub_directory
+        # check if the field is a wanted subdirectory
         if key in cat_keys:
-            # checks all keys and values in the sub_directory
+            # checks all keys and values in the subdirectory
             for sub_key, sub_value in value.items():
                 if sub_key in wanted_keys:
-                    # filters out the discounted price in the price sub-directory. Discount in 'properties' is recorded.
+                    # filters out the discounted price in the price subdirectory. Discount in 'properties' is recorded.
                     if not (key == 'price' and sub_key == 'discount'):
                         # changes the column name when the sql_field is named differently than the mdb field
                         if sub_key in bad_values:
@@ -49,11 +52,8 @@ def create_big_product_query(product):
             wanted_values += (secure_value(value),)
 
     sql_query_vp = 'VALUES (' + '%s, ' * len(wanted_values)
-
     sql_query = sql_query_ip[:-2] + ')' + sql_query_vp[:-2] + ')' + 'ON CONFLICT DO NOTHING'
-    print(product['price']['selling_price'], product['name'])
-    print(wanted_values)
-    print(sql_query)
+
     return sql_query, wanted_values
 
 
@@ -93,3 +93,7 @@ def upload_all_products():
 
     sql_connection.commit()
     sql_c.disconnect(sql_connection, sql_cursor)
+
+
+if __name__ == '__main__':
+    upload_all_products()
