@@ -58,7 +58,7 @@ CREATE TABLE recommendations(
 	recommendation_id 	 SERIAL 					PRIMARY KEY,
 	profile__id 		 VARCHAR,
 	recommendation_time  TIMESTAMP WITH TIME ZONE 	CONSTRAINT c_r_nn_rt 				NOT NULL,
-	segment 			 VARCHAR					CONSTRAINT c_r_nn_s 				NOT NULL,
+	segment 			 VARCHAR,
 	last_visit 			 TIMESTAMP WITH TIME ZONE,
 	total_pageview_count INT,
 	total_viewed_count 	 INT,
@@ -73,24 +73,23 @@ CREATE TABLE recommendation_products(
 	CONSTRAINT c_rp_fk_rid 							FOREIGN KEY (recommendation_id)		REFERENCES recommendations(recommendation_id),
 	CONSTRAINT c_rp_fk_pid 							FOREIGN KEY (product__id)			REFERENCES products(product__id)
 );
-																 
+
 CREATE TABLE buid(
 	buid 		VARCHAR 							CONSTRAINT c_b_pk 					PRIMARY KEY,
 	profile__id VARCHAR,
 	CONSTRAINT c_b_fk_pid 							FOREIGN KEY (profile__id)			REFERENCES profiles(profile__id)
 );
-														 
+
 CREATE TABLE sessions(
 	session__id 		VARCHAR 					CONSTRAINT c_ses_pk 				PRIMARY KEY,
 	buid 				VARCHAR,
-	order_id 			VARCHAR,
 	session_start 		TIMESTAMP WITH TIME ZONE	CONSTRAINT c_ses_nn_ss 				NOT NULL,
 	session_end 		TIMESTAMP WITH TIME ZONE	CONSTRAINT c_ses_nn_se 				NOT NULL,
 	has_sale 			VARCHAR 					CONSTRAINT c_ses_bool_hs 			CHECK (has_sale IN ('true', 'false')),
 	segment 			VARCHAR,
 	CONSTRAINT c_ses_fk_bid 						FOREIGN KEY (buid)					REFERENCES buid(buid)
 );
-																						   
+
 CREATE TABLE events(
 	session__id 		VARCHAR,
 	previous_events 	INT,
@@ -110,12 +109,12 @@ CREATE TABLE events(
 
 CREATE TABLE preferences( -- bools: ; categorical: category
 	session__id VARCHAR,
-	category 	VARCHAR,	
+	category 	VARCHAR,
 	preference 	VARCHAR 								CONSTRAINT c_pref_nn_p 				NOT NULL,
 	viewcount 	INT 									CONSTRAINT c_pref_nn_vc 			NOT NULL,
 	CONSTRAINT c_pref_pk 								PRIMARY KEY (session__id, category),
 	CONSTRAINT c_pref_fk 								FOREIGN KEY (session__id)			REFERENCES sessions(session__id)
-);																					   
+);
 
 CREATE TABLE ordered_products(
 	session__id VARCHAR,
@@ -148,4 +147,4 @@ CREATE TRIGGER products_nn_price
    BEFORE INSERT
    ON products
    FOR EACH ROW
-       EXECUTE PROCEDURE trigger_nn_product()
+       EXECUTE PROCEDURE trigger_nn_product();
