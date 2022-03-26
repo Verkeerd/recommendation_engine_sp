@@ -14,8 +14,8 @@ def secure_value(value):
 def create_big_product_query(product):
     """
     Takes products data (dict) as input.
-    Scans the products for desired data and creates an sql query with this.
-    Returns the query.
+    Selects desired data. Creates an sql query to insert this data in the recommendation_products table.
+    Returns this query.
     """
     sql_query_ip = 'INSERT INTO  products ( '
 
@@ -75,10 +75,7 @@ def create_product_query(product):
 
 
 def upload_product(product):
-    """
-    Takes information about a product (dict) as input.
-    Uploads the product to the local sql database.
-    """
+    """Takes information about a product (dict) as input. Uploads the product to the local sql database."""
     connection, cursor = sql_c.connect()
     sql_query = create_big_product_query(product)
     cursor.execute(sql_query)
@@ -87,7 +84,7 @@ def upload_product(product):
 
 
 def upload_all_products():
-    """Loads all products from the local mongodb database. Selects desired data and uploads that to an sql database."""
+    """Loads all products from the local mongodb database. Uploads the products to the local sql database."""
     database = mdb_c.connect_mdb()
     products_collection = database.products
     sql_connection, sql_cursor = sql_c.connect()

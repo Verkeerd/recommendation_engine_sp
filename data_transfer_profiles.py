@@ -148,7 +148,7 @@ def upload_profile(sql_cursor, profile):
 
 
 def upload_all_profiles():
-    """Loads all sessions from the local mongodb database."""
+    """Loads all profiles from the local mongodb database. Uploads the profiles to the local sql database."""
     database = mdb_c.connect_mdb()
     profile_collection = database.profiles
     sql_connection, sql_cursor = sql_c.connect()
