@@ -11,32 +11,23 @@ Install pgadmin. Create a local database and run the file make_web_shop_simple.d
 You are now ready use this project.
 
 # Design
-This is the physical datamodel of the SQL web-shop database:
+The physical datamodel of the SQL web-shop database:
 
-![web_shop_physical_datamodel](https://user-images.githubusercontent.com/96492291/158082661-25111f16-acdf-493c-a097-8c7961251d29.png)
+![](../../Documents/VP Projects/recommendation_database.png)
 
-We have chosen for this datastructure because we felt that we only needed the product_name and selling_price for all 
-products in order to complete all assignments. The product_id is also transferred to use as the primary key in the 
-rational database. All other data would have been redundant. The product_name and selling_price can both be nullable, 
-because this data can be incomplete in the original mongoDB database.
+I selected the data on basis of their potential usefulness; I.E. Do I think this data will help me make a decision on 
+what products to recommend. I made this choice because with all the  data already available, I can test which logical
+frameworks are best without having to change the data-transfer between designs.
+When a framework has been decided upon, a new data-selection will be made.
 
-To transfer the data, we load all product data from the mongoDB database. Then, we do the following per product:
-- put product information in a dict
-- create sql query
-- get wanted values by their dict_keys
-- execute the sql query, filled in with the wanted values.
-After this has been done for every product, commit all changed to the database. 
+logical →
+p = Product is recommended to this profile
+q = Product is interesting for the customer
 
-The above conversion algorithm could cause trouble if the data in the mongoDB is incomplete. When the datafield we 
-want to access doesn't exists in the mongoDB database, this will result in an error. This was not relevant for our
-wanted values, so we did not take this into consideration. 
+p → q
 
-# Assignments
-The assignments for FA2 are completed in the following files:
-- Assignments 2.a are completed in test_read_data_from_mdb.py
-- Assignment 2.c.1 is completed in load_data_sql.py
-- Assignment 2.c.2 is completed in mean_price_products.py
-- Assignment 2.c.3 is completed in random_and_absolute_difference_products.py
+q = product 
+
 
 # Contributions
 This project is made as an assignment and is not open for contribution outside our project group.
