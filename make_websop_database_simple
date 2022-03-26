@@ -1,5 +1,0 @@
-CREATE TABLE products (
-	product__id 				VARCHAR(45)			CONSTRAINT c_prod_pk_id 		PRIMARY KEY,
-	product_name 				VARCHAR(255)
-	current_price 				INT
-);
