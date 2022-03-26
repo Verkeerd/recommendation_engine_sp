@@ -11,13 +11,15 @@ def secure_value(value):
     return value
 
 
-def create_big_product_query(product):
+def create_product_query(product):
     """
     Takes products data (dict) as input.
     Selects desired data. Creates an sql query to insert this data in the recommendation_products table.
     Returns this query.
     """
-    sql_query_ip = 'INSERT INTO  products ( '
+    sql_query_format = 'INSERT INTO  products ({}) VALUES ({})'
+
+    fields_to_insert = ''
 
     # field names that are different between mongodb and sql.
     bad_values = ['_id', 'name', 'type']
@@ -43,41 +45,27 @@ def create_big_product_query(product):
                     if not (key == 'price' and sub_key == 'discount'):
                         # changes the column name when the sql_field is named differently than the mdb field
                         if sub_key in bad_values:
-                            sql_query_ip += 'product_{}, '.format(sub_key)
+                            fields_to_insert += 'product_{}, '.format(sub_key)
                         else:
-                            sql_query_ip += '{}, '.format(sub_key)
+                            fields_to_insert += '{}, '.format(sub_key)
                         wanted_values += (secure_value(sub_value),)
         elif key in wanted_keys:
             # changes the column name when the sql_field is named differently than the mdb field
             if key in bad_values:
-                sql_query_ip += 'product_{}, '.format(key)
+                fields_to_insert += 'product_{}, '.format(key)
             else:
-                sql_query_ip += '{}, '.format(key)
+                fields_to_insert += '{}, '.format(key)
             wanted_values += (secure_value(value),)
 
-    sql_query_vp = 'VALUES (' + '%s, ' * len(wanted_values)
-    sql_query = sql_query_ip[:-2] + ')' + sql_query_vp[:-2] + ')' + 'ON CONFLICT DO NOTHING'
+    sql_query = sql_query_format.format(fields_to_insert[:-2], ('%s, ' * len(wanted_values))[:-2])
 
     return sql_query, wanted_values
-
-
-def create_product_query(product):
-    """
-    Takes information about a product (dict) as input.
-    Constructs a sql query to insert this product with name, id and price into a sql database.
-    Returns the constructed sql query (str).
-    """
-    sql_query = 'INSERT INTO products (product__id, product_name, selling_price) VALUES (%s, %s, %s)'
-
-    values = (product['_id'], product['name'], product['price']['selling_price'])
-
-    return sql_query, values
 
 
 def upload_product(product):
     """Takes information about a product (dict) as input. Uploads the product to the local sql database."""
     connection, cursor = sql_c.connect()
-    sql_query = create_big_product_query(product)
+    sql_query = create_product_query(product)
     cursor.execute(sql_query)
     connection.commit()
     sql_c.disconnect(connection, cursor)
@@ -90,9 +78,8 @@ def upload_all_products():
     sql_connection, sql_cursor = sql_c.connect()
     for product in products_collection.find():
         product = dict(product)
-        sql_query, format_values = create_big_product_query(product)
+        sql_query, format_values = create_product_query(product)
         sql_cursor.execute(sql_query, format_values)
-        print(sql_query, format_values)
 
     sql_connection.commit()
     sql_c.disconnect(sql_connection, sql_cursor)

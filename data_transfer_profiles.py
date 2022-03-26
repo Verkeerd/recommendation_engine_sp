@@ -110,7 +110,6 @@ def upload_profile(sql_cursor, profile):
     - recommendation_products (if present)
     Executes the sql queries.
     """
-    print(profile['_id'])
     # skips profiles without associated buids.
     try:
         buids = profile['buids']
