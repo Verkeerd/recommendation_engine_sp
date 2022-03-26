@@ -1,4 +1,4 @@
-CREATE TABLE products ( -- bools: fast_mover, herhaalaankopen, online_only, recommendable, sm_is_active -- categorical: category, subcategory, sub_sub_category, sub_sub_sub_category, doelgroep
+CREATE TABLE products (
 	product__id 				VARCHAR 			CONSTRAINT c_prod_pk_id 			PRIMARY KEY,
 	brand 						VARCHAR,
 	category 					VARCHAR,
@@ -54,7 +54,7 @@ CREATE TABLE profiles(
 	latest_activity TIMESTAMP WITH TIME ZONE
 );
 
-CREATE TABLE recommendations( -- bools: ; -- categorical: segment 
+CREATE TABLE recommendations(
 	recommendation_id 	 SERIAL 					PRIMARY KEY,
 	profile__id 		 VARCHAR,
 	recommendation_time  TIMESTAMP WITH TIME ZONE 	CONSTRAINT c_r_nn_rt 				NOT NULL,
@@ -64,8 +64,8 @@ CREATE TABLE recommendations( -- bools: ; -- categorical: segment
 	total_viewed_count 	 INT,
 	CONSTRAINT c_r_fk_pif 							FOREIGN KEY (profile__id)			REFERENCES profiles(profile__id)
 );
-																						   
-CREATE TABLE recommendation_products(-- bools: ; -- categorical: type 	
+
+CREATE TABLE recommendation_products(
 	recommendation_id 	BIGINT,
 	product__id 		VARCHAR,
 	recommendation_type VARCHAR 					CONSTRAINT c_rp_cat_rec CHECK (recommendation_type IN ('viewed', 'similar')),
@@ -80,7 +80,7 @@ CREATE TABLE buid(
 	CONSTRAINT c_b_fk_pid 							FOREIGN KEY (profile__id)			REFERENCES profiles(profile__id)
 );
 														 
-CREATE TABLE sessions( -- bools: has_sale, categorical: segment
+CREATE TABLE sessions(
 	session__id 		VARCHAR 					CONSTRAINT c_ses_pk 				PRIMARY KEY,
 	buid 				VARCHAR,
 	order_id 			VARCHAR,
@@ -91,7 +91,7 @@ CREATE TABLE sessions( -- bools: has_sale, categorical: segment
 	CONSTRAINT c_ses_fk_bid 						FOREIGN KEY (buid)					REFERENCES buid(buid)
 );
 																						   
-CREATE TABLE events( -- bools: ; categorical: page_type, 
+CREATE TABLE events(
 	session__id 		VARCHAR,
 	previous_events 	INT,
 	event_time 			TIMESTAMP WITH TIME ZONE,
