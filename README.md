@@ -7,7 +7,7 @@ MongoDB, PostgreSQL and PGAdmin4 are used with this project.
 We assume you already have access to the mongodb database and have transferred this to a local mongo server.
 
 Clone this repository.
-Install pgadmin. Create a local database and run the file make_web_shop_simple.ddl with the query tool in pgadmin.
+Install pgadmin. Create a local database and run the file make_webshop_database.ddl with the query tool in pgadmin.
 You are now ready use this project.
 
 # Design
