@@ -47,7 +47,7 @@ def profile_ids():
 
 def all_users_profile_type_query():
     """
-    Returns a query (str) to fetches all profile_ids that are of a certain product_type. The product type can be
+    Returns an sql query (str) to fetch all profile_ids that are of a certain product_type. The product type can be
     inserted through string formatting.
     """
     return "SELECT profile__id FROM recommendations WHERE segment = '{}'"
