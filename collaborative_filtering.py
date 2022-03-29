@@ -27,10 +27,11 @@ if __name__ == '__main__':
     while not wanted_profile_type:
         random_integer = random.randint(0, len(profiles))
         random_profile_id = profiles[random_integer][0]
-        print(random_profile_id)
 
         wanted_profile_type = sql_l.fetch_profile_type(random_profile_id)
-        print(wanted_profile_type)
-    the_profile_type = wanted_profile_type[0]
-    print(recommended_products_profile_type(the_profile_type))
 
+    print('profile {}'.format(random_profile_id))
+    print(wanted_profile_type, type(wanted_profile_type))
+
+    recommended_products = recommended_products_profile_type(wanted_profile_type)
+    print("The products I recommended are {}".format(recommended_products_profile_type(wanted_profile_type)[:10]))

@@ -26,8 +26,11 @@ if __name__ == '__main__':
     while not recommended_products:
         random_integer = random.randint(0, len(profiles))
         random_profile_id = profiles[random_integer][0]
-        print(random_profile_id)
-
         recommended_products = recommend_products(random_profile_id)
-        print(recommended_products)
+
+    print('profile {}'.format(random_profile_id))
+    if len(recommended_products) >= 10:
+        print("The products I recommended are {}".format(recommended_products[:10]))
+    else:
+        print("The products I recommended are {}".format(recommended_products))
 
