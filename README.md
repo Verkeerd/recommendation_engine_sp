@@ -62,4 +62,3 @@ speed up the data transfer:
 This project is made as an assignment and is not open for contribution outside our project group.
 There is no hierarchy in our project group so there are no rules regarding pushing and pulling. 
 Please hold yourself to a clean code etiquette when you code for this project.
- 
