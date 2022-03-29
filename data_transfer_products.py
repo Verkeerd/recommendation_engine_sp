@@ -1,6 +1,8 @@
 import mongo_connection as mdb_c
 import sql_connection as sql_c
 
+# TODO: make 1 big sql statement and execute it in one go.
+
 
 def secure_value(value):
     """Turns empty strings and integers (0 and "0") into None. Returns all other values unchanged."""
