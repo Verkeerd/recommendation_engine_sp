@@ -22,18 +22,19 @@ When a framework has been decided upon, a new data-selection will be made.
 
 content filtering logical framework:
 
-p = Product is recommended to this profile
-q = Product is interesting for the customer
+p = Product is recommended to the customer
+q = Product is interesting to the customer
 
 p → q
 
 collaborative filtering logical framework
 
-p = product is recommended to similar customer
-q = products is interesting to similar customer
+r(x, y) = x is recommended to y (product x is recorded under recommended_products under y)
+i(x, y) = x is interesting to y (product x should be recommended to the user on the website.)
+s(x, y) = x is similar to y (profiles x and y have the same segment in recommendation)
 r = product is interesting for the customer
 
-(p → q) → r
+(r(x, y) → i(x, y) /\ r(y, z)) → i(x, z) 
 
 # TODO
 speed up the data transfer:
