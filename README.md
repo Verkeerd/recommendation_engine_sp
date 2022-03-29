@@ -20,14 +20,25 @@ what products to recommend. I made this choice because with all the  data alread
 frameworks are best without having to change the data-transfer between designs.
 When a framework has been decided upon, a new data-selection will be made.
 
-logical →
+content filtering logical framework:
+
 p = Product is recommended to this profile
 q = Product is interesting for the customer
 
 p → q
 
-q = product 
+collaborative filtering logical framework
 
+p = product is recommended to similar customer
+q = products is interesting to similar customer
+r = product is interesting for the customer
+
+(p → q) → r
+
+# TODO
+speed up the data transfer:
+- construct ddl file to insert all data in one go. 
+- research compression of ddl file before send off.
 
 # Contributions
 This project is made as an assignment and is not open for contribution outside our project group.
