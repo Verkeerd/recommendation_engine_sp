@@ -46,9 +46,9 @@ r = product is interesting for the customer
 
 (r(x, y) → i(x, y) /\ r(y, z)) → i(x, z) 
 
-I chose these frameworks because they are very simple. I chose for this because I only want to demonstrate that the 
-database works correctly and the relations can be utilized. These frameworks are enough to demonstrate this. However, 
-they (especially the collaborative filtering rule) do not give very good recommendations
+I chose these frameworks because they are very simple. I chose for this, because I did not have much time and I only 
+want to demonstrate that the database works correctly and the relations can be utilized. These frameworks are enough to 
+demonstrate this. However, they (especially the collaborative filtering rule) do not give very good recommendations.
 
 # TODO
 speed up the data transfer:
