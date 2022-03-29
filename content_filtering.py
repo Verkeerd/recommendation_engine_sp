@@ -7,6 +7,12 @@ def recommend_products(profile_id):
     """
     Takes a profile_id as input. fetches the product_id of all products that have been recommended to this user.
     Returns the products ids (tuple).
+    logical framework:
+
+    p = Product is recommended to the customer
+    q = Product is interesting to the customer
+
+    p → q
     """
     sql_connection, sql_cursor = sql_c.connect()
     sql_query = sql_l.recommended_products_profile_query()

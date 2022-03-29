@@ -8,6 +8,15 @@ def recommended_products_profile_type(profile_type):
     Takes a profile_type as input. Fetches the product_id of all products that are recommended to the profiles of the
     given profile_type.
     Returns the product_ids (list) [str].
+
+    logical framework:
+
+    r(x, y) = x is recommended to y (product x is recorded under recommended_products under y)
+    i(x, y) = x is interesting to y (product x should be recommended to the user on the website.)
+    s(x, y) = x is similar to y (profiles x and y have the same segment in recommendation)
+    r = product is interesting for the customer
+
+    (r(x, y) → i(x, y) /\ r(y, z)) → i(x, z)
     """
     sql_connection, sql_cursor = sql_c.connect()
 
