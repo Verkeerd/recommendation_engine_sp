@@ -63,11 +63,20 @@ def fetch_profile_type(profile_id):
     connection, cursor = sql_c.connect()
     cursor.execute("""SELECT segment FROM recommendations WHERE profile__id = '{}'""".format(profile_id))
     profile_type = cursor.fetchone()
+    # if profile type is not found in recommendations, looks in sessions for a profile_type
     if not profile_type:
         cursor.execute("""SELECT segment FROM sessions WHERE session__id IN (
         SELECT session__id FROM sessions WHERE buid IN (
         SELECT buid FROM buid WHERE profile__id = '{}'))""".format(profile_id))
-        profile_type = cursor.fetchall()
+        profile_type_possebils = cursor.fetchall()
+        # loops until not empty segment is found
+        while not profile_type:
+            # escapes if no segments are found recorded in the sessions
+            if not profile_type_possebils:
+                return None
+            # takes the last segment
+            profile_type = profile_type_possebils[-1]
+            profile_type_possebils.pop()
         # TODO Fetch modus (without counting none)
 
     sql_c.disconnect(connection, cursor)
