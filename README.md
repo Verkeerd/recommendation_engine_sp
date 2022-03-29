@@ -26,7 +26,8 @@ The documents are scanned for the data selection and is inserted into the sql da
 in between the inserts, only one commit at the end.
 
 I chose the separate insert statements because it was the first way I thought of, but it is not very fast. 
-I want to make one big insert statement and execute it in one go. However, this has not been implemented yet.
+I want to make one big insert statement, maybe compress it, and execute it in one go. However, this has not been 
+implemented yet.
 
 # Logical Framework
 content filtering logical framework:
