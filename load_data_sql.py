@@ -34,7 +34,7 @@ def name_price_products():
 
 # profiles
 def profile_ids():
-    """"""
+    """Fetches all profile_ids available and returns them (tuple)"""
     connection, cursor = sql_c.connect()
 
     cursor.execute("""SELECT profile__id FROM profiles""")
@@ -46,29 +46,41 @@ def profile_ids():
 
 
 def all_users_profile_type_query():
-    """"""
+    """
+    Returns a query (str) to fetches all profile_ids that are of a certain product_type. The product type can be
+    inserted through string formatting.
+    """
     return "SELECT profile__id FROM recommendations WHERE segment = '{}'"
 
 
 def fetch_profile_type(profile_id):
-    """"""
+    """
+    Takes a profile_id (str) as input. Fecthes 'segment' under preferences, when available. Otherwise, fetches
+    the segments of the user's sessions and returns the segment that occurs most often.
+    Returns segment (used as profile_type) (str).
+    Returns None is there are no segments recorded.
+    """
     connection, cursor = sql_c.connect()
     cursor.execute("""SELECT segment FROM recommendations WHERE profile__id = '{}'""".format(profile_id))
-    try:
-        return cursor.fetchone()
-    except:
-        cursor.execute("""SELECT segment FROM preferences WHERE session__id = (
-    SELECT session__id FROM sessions WHERE buid = (
-    SELECT buid FROM buid WHERE profile__id = '{}'))""".format(profile_id))
-        try:
-            return cursor.fetchall()
-        except:
-            return None
+    profile_type = cursor.fetchone()
+    if not profile_type:
+        cursor.execute("""SELECT segment FROM sessions WHERE session__id IN (
+        SELECT session__id FROM sessions WHERE buid IN (
+        SELECT buid FROM buid WHERE profile__id = '{}'))""".format(profile_id))
+        profile_type = cursor.fetchall()
+        # TODO Fetch modus (without counting none)
+
+    sql_c.disconnect(connection, cursor)
+
+    return profile_type[0]
 
 
 # recommended products
 def recommended_products_profile_query():
-    """"""
+    """
+    Returns an sql query (str) that fetches all products, recommended to a profile id. The profile_id can be inserted
+    through string formatting.
+    """
     # returns all products that are/have been recommended to this profile.
     # TODO: Filter bought (non-repeat) products
     # TODO: Filter often recommended but never bought products. Cap it? → depending on how this pans out in the final
@@ -77,16 +89,14 @@ def recommended_products_profile_query():
            "(SELECT recommendation_id FROM recommendations WHERE profile__id = '{}')"
 
 
-
 def recommended_products_several_profiles_query():
-    """"""
+    """
+    Returns an sql query (str) that fetches all products, recommended to several profile ids. The profile ids can be
+    inserted through string formatting.
+    """
     # returns all products that are/have been recommended to this profile.
     # TODO: Filter bought (non-repeat) products
     # TODO: Filter often recommended but never bought products. Cap it? → depending on how this pans out in the final
     #  design, probably restructure the database
     return "SELECT product__id FROM recommendation_products WHERE recommendation_id IN (" \
            "(SELECT recommendation_id FROM recommendations WHERE profile__id IN ({})))"
-
-
-if __name__ == '__main__':
-    pass
