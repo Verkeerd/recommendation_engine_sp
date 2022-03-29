@@ -20,6 +20,7 @@ what products to recommend. I made this choice because with all the  data alread
 frameworks are best without having to change the data-transfer between designs.
 When a framework has been decided upon, a new data-selection will be made.
 
+# Logical Framework
 content filtering logical framework:
 
 p = Product is recommended to the customer
@@ -40,6 +41,9 @@ r = product is interesting for the customer
 speed up the data transfer:
 - construct ddl file to insert all data in one go. 
 - research compression of ddl file before send off.
+- add ranking between products
+- add bought_products to recommendations
+- add better profiles for users
 
 # Contributions
 This project is made as an assignment and is not open for contribution outside our project group.
