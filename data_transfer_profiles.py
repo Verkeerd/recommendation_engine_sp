@@ -116,12 +116,14 @@ def recommendation_table_values(profile, recommendation_id):
 def all_values_for_profiles(profile, sql_cursor):
     """
     Takes a profile (dict) and the active sql_cursor as input.
+
     Selects where present the wanted data from the profile.
     Wanted data is data we want to upload to the following sql tables:
     - profiles
     - buid
     - recommendations (if present)
     - recommendation_products (if present)
+
     Returns profile_values, buid_values, recommendation_values, recommendation_products_values (tuple) ([], [], [], [])
     """
     buids = shared.secure_dict_item(profile, 'buids')

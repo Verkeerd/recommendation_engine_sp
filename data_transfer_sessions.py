@@ -11,9 +11,9 @@ import time
 # TODO: find workaround for memory issue with one (to four) sql insert statements.
 
 
+# queries
 def create_session_query():
     """
-    Takes session_data (dict) as input.
     Selects the following data from the session:
     - session_id
     - buid
@@ -32,7 +32,6 @@ def create_session_query():
 
 def create_event_query():
     """
-    Takes event_data (dict), a session_id (str) and number of previous events (int) as input.
     Selects the following data from the event:
     - time
     - source
@@ -45,7 +44,7 @@ def create_event_query():
     - scrolls down (if present)
     - scrolls up (if present)
     Creates an sql query to insert this data (with the other input data) in the events table.
-    Returns this query.
+    Returns this query (str).
     """
     return """
     INSERT INTO events (session__id, previous_events, event_time, event_source, event_action, page_type, product, 
@@ -57,8 +56,11 @@ def create_event_query():
 
 def create_ordered_product_query():
     """
-    Takes a session_id (str) and, product__id (str) and a product_count (int) as input.
-    Creates an sql query to insert this data in the ordered_products table and returns this query.
+    Creates an sql query to insert the following data in the ordered_products table:
+    - session_id
+    - product_id
+    - product_count
+    Returns this query.
     """
     # source where exists/for share clause: Erwin Brandstetter
     # https://dba.stackexchange.com/questions/252875/how-to-make-on-conflict-work-for-compound-foreign-key-columns
@@ -74,7 +76,15 @@ def create_ordered_product_query():
 
 
 def create_preference_query():
-    """Returns the query to insert data into the preference table without arguments."""
+    """
+    Returns the query to insert the following data into the preference table:
+    - session_id
+    - category
+    - preference
+    - views
+    - sales
+    Returns the query (str).
+    """
     return """
     INSERT INTO preferences (session__id, category, preference, views, sales) 
     
@@ -82,11 +92,24 @@ def create_preference_query():
     """
 
 
+# fetch values
 def get_session_values(session, known_buids):
+    """
+    Takes session_data (dict), known_buids (list) as input.
+    Selects the following data from the session:
+    - session_id
+    - buid
+    - session start
+    - session end
+    - has sale
+    - segment
+    Returns these values in order (tuple).
+    """
     buid = shared.secure_dict_item_double(session, 'buid', 0)
+    # records parentless sessions under buid '0'
     if not buid:
         buid = '0'
-    if buid not in known_buids:
+    if buid not in known_buids:     # checks if the buid is known in the system.
         buid = '0'
 
     return (session['_id'],
@@ -98,6 +121,21 @@ def get_session_values(session, known_buids):
 
 
 def get_event_values(event, session_id, previous_events):
+    """
+    Takes event_data (dict), a session_id (str) and number of previous events (int) as input.
+    Selects the following data from the event:
+    - time
+    - source
+    - action
+    - type
+    - product (if present)
+    - time on page (if present)
+    - click count (if present)
+    - elements clicked (if present)
+    - scrolls down (if present)
+    - scrolls up (if present)
+    Returns the selected values in order (tuple).
+    """
     wanted_values = (session_id,
                      previous_events,
                      event['t'],
@@ -113,8 +151,12 @@ def get_event_values(event, session_id, previous_events):
 
 def get_order_values(order, session_id):
     """
-    Takes an active sql_cursor, order-data (dict) and a session_id (str) as input.
-    Uploads each individual product with a product count to the ordered_products table.
+    Takes an order (dict) and a session_id (str) as input.
+    Counts how often each product appears in the order dict and puts following data in a tuple:
+    - session_id
+    - product_id
+    - product_count
+    Puts these tuples in a list and returns this (list) [(str, str, int)]
     """
     result = list()
     if not order:
@@ -134,54 +176,84 @@ def get_order_values(order, session_id):
     return result
 
 
+def get_preference_values(preferences, session_id):
+    """
+    Takes preferences (dict) and session_id (str) as input.
+    Selects the following data from preferences for every item in preferences:
+    - category
+    - preference
+    - views
+    - sales
+    Puts the session_id and these values (in order) in a tuple. Places the tuples in a list.
+    Returns this (list) [(int, str, str, int, int)]
+    """
+    result = list()
+    if not preferences:
+        return result
+    for category, entry_data in list(preferences.items()):
+        entry_name, view_count = list(entry_data.items())[0]
+        result.append((session_id,
+                       category,
+                       entry_name,
+                       shared.secure_dict_item(view_count, 'views'),
+                       shared.secure_dict_item(view_count, 'sales')))
+    return preferences
+
+
 def all_values_session(session, known_buids):
-    """"""
+    """
+    Takes a profile (dict) and the active sql_cursor as input.
+
+    Selects where present the wanted data from the profile.
+    Wanted data is data we want to upload to the following sql tables:
+    - sessions
+    - events
+    - ordered_products (if present)
+    - preferences (if present)
+
+    Returns session_values, event_values, ordered_products_values, preference_values (tuple) ([], [], [], []
+    """
     events = shared.secure_dict_item(session, 'events')
     if not events:
         return tuple(), tuple(), tuple(), tuple()
 
-    session_values = get_session_values(session, known_buids)
+    # creates the lists we are going to fill and return
+    session_values = get_session_values(session, known_buids)   # fetches session values
     events_values = list()
     ordered_products_values = list()
     preferences_values = tuple()
 
+    # selects event values for every event associated with the session. Adds them to the event value list
     for previous_events, event in enumerate(events):
         events_values.append((get_event_values(event, session['_id'], previous_events)))
 
+    # selects order values for every order associated with the session. Adds them to the order value list
     order = shared.secure_dict_item(session, 'order')
     if order:
         ordered_products_values = get_order_values(order, session['_id'])
 
     preferences = shared.secure_dict_item(session, 'preferences')
     if preferences:
+        # selects preference_category, preference and view_count or sale_count for every preference associated with
+        # the session. Adds them to the preference value list.
+        # TODO: ↓ Better names! also in the sql database
         for category, entries in list(preferences.items()):
-            entry_name, view_count = list(entries.items())[0]
+            entry_name, present_counter = list(entries.items())[0]
             preferences_values = (session['_id'],
                                   category,
                                   entry_name,
-                                  shared.secure_dict_item(view_count, 'views'),
-                                  shared.secure_dict_item(view_count, 'sales'))
+                                  shared.secure_dict_item(present_counter, 'views'),
+                                  shared.secure_dict_item(present_counter, 'sales'))
 
     return session_values, events_values, ordered_products_values, preferences_values
 
 
-def get_preference_values(preferences, session_id):
-    result = list()
-    if not preferences:
-        return result
-    for category, entry_data in list(preferences.items()):
-        entry_name, view_count = list(entry_data.items())[0]
-        result.append((session_id, category, entry_name, view_count['views']))
-    return preferences
-
-
 def upload_session(sql_cursor, session, known_buids):
     """
-    Takes an active sql_cursor and profile-data (dict) as input.
+    Takes an active sql_cursor and a session (dict) as input.
     Creates several sql queries to upload the profile data to the following sql tables:
     - sessions
     - events
-    - orders (if present)
     - ordered_products (if present)
     - preferences (if present)
     Executes the sql queries.
@@ -249,7 +321,7 @@ def upload_all_sessions():
     sql_connection.commit()
     sql_c.disconnect(sql_connection, sql_cursor)
 
-    return (time.time_ns() - start_time) / (9*60)
+    return (time.time_ns() - start_time) / (9 * 60)
 
 
 if __name__ == '__main__':
