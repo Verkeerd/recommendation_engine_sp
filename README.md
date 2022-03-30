@@ -32,23 +32,38 @@ implemented yet.
 # Logical Framework
 content filtering logical framework:
 
-p = Product is recommended to the customer
-q = Product is interesting to the customer
+V(x, y) = x is viewed y
+S(x, y) = x is similar to y
+R(x, y) = x is in the recommendation_table of y
+I(x, y) = x is interesting to y
 
-p → q
+A product is in the recommendation_table when it has been viewed before
+V(x, c) -> R(x, c)
+A product is in the recommendation_table when it is similar to a product that had been viewed before
+(V(x, c) ∧ S(x, y)) -> R(y, c)
+
+A product is interesting to the customer when it is in the recommendation_table
+((V(x, c) ∧ S(x, y)) ∨ V(y, c)) -> R(y, c) -> I(y, c)
 
 collaborative filtering logical framework
 
-r(x, y) = x is recommended to y (product x is recorded under recommended_products under y)
-i(x, y) = x is interesting to y (product x should be recommended to the user on the website.)
-s(x, y) = x is similar to y (profiles x and y have the same segment in recommendation)
-r = product is interesting for the customer
+V(x, y) = x is viewed by y
+S(x, y) = x is similar to y
+R(x, y) = x x is in the recommendation_table of y
+I(x, y) = x is interesting to y (product x should be recommended to the user on the website.)
 
-(r(x, y) → i(x, y) /\ r(y, z)) → i(x, z) 
+A product is interesting to the customer when it is in the recommendation_table
+((V(x, c) ∧ S(x, y)) ∨ V(y, c)) -> R(y, c) -> I(y, c)
+A product that is interesting for a customer is also interesting for similar customers
+(I(x, c) ∧ S(c, c2)) -> I(x, c2)
 
-I chose these frameworks because they are very simple. I chose for this, because I did not have much time and I only 
-want to demonstrate that the database works correctly and the relations can be utilized. These frameworks are enough to 
-demonstrate this. However, they (especially the collaborative filtering rule) do not give very good recommendations.
+A product is interesting for to the customer when it is in the recommendation_table of similar customers
+((((V(x, c) ∧ S(x, y)) ∨ V(y, c)) -> R(y, c) -> I(y, c)) ∧ S(c, c2)) -> I(y, c2)
+
+I chose these frameworks because they are very simple to turn into a recommendation engine with the available data. I 
+made this decision because I did not have much time. I also only want to demonstrate that the database works correctly 
+and the relations can be utilized. These frameworks are enough to demonstrate this. However, they (especially the 
+collaborative filtering rule) do not give very good recommendations and are not very creative.
 
 # TODO
 speed up the data transfer:
