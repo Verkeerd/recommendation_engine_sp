@@ -111,7 +111,8 @@ CREATE TABLE preferences( -- bools: ; categorical: category
 	session__id VARCHAR,
 	category 	VARCHAR,
 	preference 	VARCHAR 								CONSTRAINT c_pref_nn_p 				NOT NULL,
-	viewcount 	INT 									CONSTRAINT c_pref_nn_vc 			NOT NULL,
+	views       INT,
+	sales       INT,
 	CONSTRAINT c_pref_pk 								PRIMARY KEY (session__id, category),
 	CONSTRAINT c_pref_fk 								FOREIGN KEY (session__id)			REFERENCES sessions(session__id)
 );
