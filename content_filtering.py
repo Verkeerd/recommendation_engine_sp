@@ -8,7 +8,8 @@ def recommend_products(profile_id, amount=4):
     Takes a profile_id (str), amount (int) as input. Fetches the product_id of all products that have been recommended
     to this user.
     Returns the products ids (tuple) (str).
-    logical framework:
+
+    Logical framework:
 
     V(x, y) = x is viewed y
     S(x, y) = x is similar to y
