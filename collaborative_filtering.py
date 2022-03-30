@@ -9,14 +9,20 @@ def recommended_products_profile_type(profile_type, amount=4):
     the profiles of the given profile_type.
     Returns (input) amount of product_ids (tuple) (str).
 
-    logical framework:
+    Logical framework:
 
-    r(x, y) = x is recommended to y (product x is recorded under recommended_products under y)
-    i(x, y) = x is interesting to y (product x should be recommended to the user on the website.)
-    s(x, y) = x is similar to y (profiles x and y have the same segment in recommendation)
-    r = product is interesting for the customer
+    V(x, y) = x is viewed by y
+    S(x, y) = x is similar to y
+    R(x, y) = x x is in the recommendation_table of y
+    I(x, y) = x is interesting to y (product x should be recommended to the user on the website.)
 
-    [ r(x, y) → i(x, y) ∧ r(y, z)) → i(x, z) ]
+    A product is interesting to the customer when it is in the recommendation_table
+    ((V(x, c) ∧ S(x, y)) ∨ V(y, c)) -> R(y, c) -> I(y, c)
+    A product that is interesting for a customer is also interesting for similar customers
+    (I(x, c) ∧ S(c, c2)) -> I(x, c2)
+
+    A product is interesting for to the customer when it is in the recommendation_table of similar customers
+    ((((V(x, c) ∧ S(x, y)) ∨ V(y, c)) -> R(y, c) -> I(y, c)) ∧ S(c, c2)) -> I(y, c2)
     """
     sql_connection, sql_cursor = sql_c.connect()
 
@@ -51,16 +57,15 @@ def recently_bought_products(amount=4):
 
 
 if __name__ == '__main__':
-    # profiles = sql_l.profile_ids()
-    # wanted_products = False
-    #
-    # while not wanted_products:
-    #     random_integer = random.randint(0, len(profiles))
-    #     random_profile_id = profiles[random_integer][0]
-    #
-    #     wanted_products = recommend_products_profile(random_profile_id)
-    #
-    # print('profile {}'.format(random_profile_id))
-    #
-    # print("The products I recommended are {}".format(wanted_products))
-    print(recently_bought_products(10))
+    profiles = sql_l.profile_ids()
+    wanted_products = False
+
+    while not wanted_products:
+        random_integer = random.randint(0, len(profiles))
+        random_profile_id = profiles[random_integer][0]
+
+        wanted_products = recommend_products_profile(random_profile_id)
+
+    print('profile {}'.format(random_profile_id))
+
+    print("The products I recommended are {}".format(wanted_products))
