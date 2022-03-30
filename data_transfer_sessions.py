@@ -248,6 +248,7 @@ def all_values_session(session, known_buids):
     return session_values, events_values, ordered_products_values, preferences_values
 
 
+# upload
 def upload_session(sql_cursor, session, known_buids):
     """
     Takes an active sql_cursor and a session (dict) as input.

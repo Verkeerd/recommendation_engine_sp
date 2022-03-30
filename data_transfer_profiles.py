@@ -68,7 +68,7 @@ def create_recommendation_product_query():
                    );"""
 
 
-# retrieve values
+# fetch values
 def profile_table_values(profile):
     """
     Takes profile-data (dict) as input.
@@ -158,6 +158,7 @@ def all_values_for_profiles(profile, sql_cursor):
     return profile_values, buid_values, recommendation_values, recommended_products_values
 
 
+# upload
 def upload_profile(profile):
     """
     Takes an active sql_cursor and profile-data (dict) as input.

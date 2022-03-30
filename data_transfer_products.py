@@ -3,27 +3,23 @@ import sql_connection as sql_c
 import transfer_functions as shared
 
 
+# query
 def create_product_query():
-    """
-    Takes products data (dict) as input.
-    Selects desired data. Creates an sql query to insert this data in the recommendation_products table.
-    Returns this query.
-    """
+    """Creates an sql query to insert the desired data in the products table and returns this query."""
     return """
-
     INSERT INTO  products (product__id, product_name, brand, category, color, fast_mover, flavor, gender, 
     herhaalaankopen, recommendable, sub_category, sub_sub_category, sub_sub_sub_category, selling_price, availability, 
     discount, doelgroep, eenheid, factor, folder_actief, gebruik, geschikt_voor, geursoort, huidconditie, huidtype, 
     huidtypegezicht, inhoud, klacht, kleur, leeftijd, mid, online_only, serie, shopcart_promo_item, 
     shopcart_promo_price, soort, soort_mondverzorging, sterkte, product_type, typehaarkleuring, typetandenbostel, 
     variant, waterproof, weekdeal) 
-
     VALUES ({} %s);
     """.format('%s,' * 43)
 
 
+# fetch values
 def get_product_values(product):
-    """"""
+    """Takes a product (dict) as input. Selects all wanted data and returns this (tuple)."""
     result = tuple()
     wanted_fields = ['_id', 'name', 'brand', 'category', 'color', 'fast_mover', 'flavor', 'gender', 'herhaalaankopen',
                      'recommendable', 'sub_category', 'sub_sub_category', 'sub_sub_sub_category']
@@ -46,6 +42,7 @@ def get_product_values(product):
     return result
 
 
+# upload
 def upload_product(product):
     """Takes information about a product (dict) as input. Uploads the product to the local sql database."""
     connection, cursor = sql_c.connect()
