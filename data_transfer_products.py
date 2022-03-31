@@ -34,11 +34,11 @@ def get_product_values(product):
                               'typehaarkleuring', 'typetandenbostel', 'variant', 'waterproof', 'weekdeal']
 
     for field in wanted_fields:
-        result += (shared.secure_dict_item(product, field),)
+        result += (shared.secure_dict_fetch(product, field),)
     for field in wanted_price_fields:
-        result += (shared.secure_dict_item_double(product, 'price', field),)
+        result += (shared.secure_dict_fetch_double(product, 'price', field),)
     for field in wanted_property_fields:
-        result += (shared.secure_dict_item_double(product, 'properties', field),)
+        result += (shared.secure_dict_fetch_double(product, 'properties', field),)
 
     return result
 

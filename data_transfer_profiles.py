@@ -82,10 +82,10 @@ def profile_table_values(profile):
     Returns this data (tuple) (str, date_time, date_time, date_time, date_time)
     """
     wanted_values = (str(profile['_id']),
-                     shared.secure_dict_item_double(profile, 'sm', 'created'),
-                     shared.secure_dict_item(profile, 'latest_activity'),
-                     shared.secure_dict_item_double(profile, 'order', 'latest'),
-                     shared.secure_dict_item_double(profile, 'order', 'first'))
+                     shared.secure_dict_fetch_double(profile, 'sm', 'created'),
+                     shared.secure_dict_fetch(profile, 'latest_activity'),
+                     shared.secure_dict_fetch_double(profile, 'order', 'latest'),
+                     shared.secure_dict_fetch_double(profile, 'order', 'first'))
 
     return wanted_values
 
@@ -126,7 +126,7 @@ def all_values_for_profiles(profile, sql_cursor):
 
     Returns profile_values, buid_values, recommendation_values, recommendation_products_values (tuple) ([], [], [], [])
     """
-    buids = shared.secure_dict_item(profile, 'buids')
+    buids = shared.secure_dict_fetch(profile, 'buids')
     # skips profiles without associated buids.
     if not buids:
         return (list(),) * 4
@@ -141,7 +141,7 @@ def all_values_for_profiles(profile, sql_cursor):
     for buid in buids:
         buid_values.append((str(buid), str(profile['_id'])))
 
-    recommendation_data = shared.secure_dict_item(profile, 'recommendations')
+    recommendation_data = shared.secure_dict_fetch(profile, 'recommendations')
     if recommendation_data:
         # selects the recommendation_id by using the sql-sequence
         sql_cursor.execute("""SELECT nextval('recommendations_recommendation_id_seq')""")
