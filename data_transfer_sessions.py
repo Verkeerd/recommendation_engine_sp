@@ -272,7 +272,7 @@ def upload_session(session):
     ordered_products_query = create_ordered_product_query()
     preferences_query = create_preference_query()
 
-    #uploads data to the session table
+    # uploads data to the session table
     sql_cursor.execute(session_query, session_value)
     # uploads data to the event table
     psycopg2.extras.execute_batch(sql_cursor, event_query, event_value)
@@ -315,8 +315,7 @@ def upload_all_sessions():
             psycopg2.extras.execute_batch(sql_cursor, event_query, event_value)
 
             if ordered_products_value:
-                # prints porduct_id sometimes, so I don't freak out when I don't see anything happening in the feed
-                # not everytime, so I don't freak out about the print statements affecting performance (even stupider...)
+                # prints session_id sometimes to show progress
                 print(session_value[0])
                 # uploads data to the ordered_products table
                 psycopg2.extras.execute_batch(sql_cursor, ordered_products_query, ordered_products_value)
@@ -333,4 +332,4 @@ def upload_all_sessions():
 
 
 if __name__ == '__main__':
-    print('upload took {}'.format(upload_all_sessions()))
+    print('upload took {:.1f} minutes'.format(upload_all_sessions() / 60))
