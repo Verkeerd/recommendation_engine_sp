@@ -149,3 +149,24 @@ CREATE TRIGGER products_nn_price
    ON products
    FOR EACH ROW
        EXECUTE PROCEDURE trigger_nn_product();
+
+-- trigger that skips all products with a null value for name or price.
+CREATE FUNCTION trigger_unknown_buid()
+   RETURNS TRIGGER
+   LANGUAGE PLPGSQL
+AS $$
+BEGIN
+	IF EXISTS (SELECT buid.buid FROM buid WHERE buid.buid = NEW.buid)
+		THEN RETURN NEW;
+	ELSE
+		NEW.buid = '0';
+	END IF;
+RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER unknown_buid
+   BEFORE INSERT
+   ON sessions
+   FOR EACH ROW
+       EXECUTE PROCEDURE trigger_unknown_buid()
