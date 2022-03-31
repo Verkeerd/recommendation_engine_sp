@@ -245,6 +245,7 @@ def upload_all_profiles():
                                   page_size=10000)
     print('recommended_products_query table updated')
     sql_connection.commit()
+    print('Data is committed')
     sql_c.disconnect(sql_connection, sql_cursor)
 
 
