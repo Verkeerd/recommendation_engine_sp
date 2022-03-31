@@ -1,6 +1,7 @@
 import mongo_connection as mdb_c
 import sql_connection as sql_c
 import transfer_functions as shared
+import psycopg2.extras
 
 
 # query
@@ -63,7 +64,7 @@ def upload_all_products():
     for product in products_collection.find():
         values_to_insert.append(get_product_values(product))
 
-    sql_cursor.executemany(sql_query, values_to_insert)
+    psycopg2.extras.execute_batch(sql_cursor, sql_query, values_to_insert, page_size=10000)
 
     sql_connection.commit()
     sql_c.disconnect(sql_connection, sql_cursor)

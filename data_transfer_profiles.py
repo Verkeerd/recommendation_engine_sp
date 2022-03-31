@@ -1,6 +1,7 @@
 import mongo_connection as mdb_c
 import sql_connection as sql_c
 import transfer_functions as shared
+import psycopg2.extras
 
 
 # queries
@@ -85,8 +86,7 @@ def profile_table_values(profile):
                      shared.secure_dict_item(profile, 'latest_activity'),
                      shared.secure_dict_item_double(profile, 'order', 'latest'),
                      shared.secure_dict_item_double(profile, 'order', 'first'))
-    if len(wanted_values) != 5:
-        print(wanted_values)
+
     return wanted_values
 
 
@@ -224,13 +224,25 @@ def upload_all_profiles():
     print('compiling complete')
 
     # executes the insert statement for each sql table.
-    sql_cursor.executemany(profile_query, profile_values)
+    psycopg2.extras.execute_batch(sql_cursor,
+                                  profile_query,
+                                  profile_values,
+                                  page_size=10000)
     print('profile table updated')
-    sql_cursor.executemany(buid_query, buid_values)
+    psycopg2.extras.execute_batch(sql_cursor,
+                                  buid_query,
+                                  buid_values,
+                                  page_size=10000)
     print('buid table updated')
-    sql_cursor.executemany(recommendation_query, recommendation_values)
+    psycopg2.extras.execute_batch(sql_cursor,
+                                  recommendation_query,
+                                  recommendation_values,
+                                  page_size=10000)
     print('recommendation table updated')
-    sql_cursor.executemany(recommended_products_query, recommended_products_values)
+    psycopg2.extras.execute_batch(sql_cursor,
+                                  recommended_products_query,
+                                  recommended_products_values,
+                                  page_size=10000)
     print('recommended_products_query table updated')
     sql_connection.commit()
     sql_c.disconnect(sql_connection, sql_cursor)
