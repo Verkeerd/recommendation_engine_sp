@@ -1,5 +1,5 @@
 import psycopg2.extras
-
+import datetime
 import mongo_connection as mdb_c
 import sql_connection as sql_c
 import transfer_functions as shared
@@ -7,8 +7,8 @@ import time
 
 
 # TODO: save compiled sql insert statement before exiting # TODO: save compiled sql insert statement before exiting code
-# TODO: compile ddl file and compress for more speedy execution (maybe?)
-# TODO: find workaround for memory issue with one (to four) sql insert statements.
+# TODO: compile (ddl?) file to work around memory problem and still execute in one go. (or find better solution)
+# TODO: and compress for more speedy execution (maybe?)
 
 
 # queries
@@ -93,7 +93,7 @@ def create_preference_query():
 
 
 # fetch values
-def get_session_values(session, known_buids):
+def get_session_values(session):
     """
     Takes session_data (dict), known_buids (list) as input.
     Selects the following data from the session:
@@ -105,19 +105,16 @@ def get_session_values(session, known_buids):
     - segment
     Returns these values in order (tuple).
     """
-    buid = shared.secure_dict_item_double(session, 'buid', 0)
-    # records parentless sessions under buid '0'
-    if not buid:
-        buid = '0'
-    if buid not in known_buids:     # checks if the buid is known in the system.
-        buid = '0'
+    buid = str(shared.secure_dict_fetch_double(session, 'buid', 0))
 
-    return (session['_id'],
-            buid,
-            session['session_start'],
-            session['session_end'],
-            session['has_sale'],
-            shared.secure_dict_item(session, 'segment'))
+    wanted_values = (str(session['_id']),
+                     buid,
+                     session['session_start'],
+                     session['session_end'],
+                     session['has_sale'],
+                     shared.secure_dict_fetch(session, 'segment'))
+
+    return wanted_values
 
 
 def get_event_values(event, session_id, previous_events):
@@ -145,7 +142,8 @@ def get_event_values(event, session_id, previous_events):
 
     uncertain_values = ['product', 'time_on_page', 'click_count', 'elements_clicked', 'scrolls_down', 'scrolls_up']
     for value in uncertain_values:
-        wanted_values += (shared.secure_dict_item(event, value),)
+        wanted_values += (shared.secure_dict_fetch(event, value),)
+
     return wanted_values
 
 
@@ -195,12 +193,12 @@ def get_preference_values(preferences, session_id):
         result.append((session_id,
                        category,
                        entry_name,
-                       shared.secure_dict_item(view_count, 'views'),
-                       shared.secure_dict_item(view_count, 'sales')))
+                       shared.secure_dict_fetch(view_count, 'views'),
+                       shared.secure_dict_fetch(view_count, 'sales')))
     return preferences
 
 
-def all_values_session(session, known_buids):
+def all_values_session(session):
     """
     Takes a profile (dict) and the active sql_cursor as input.
 
@@ -213,43 +211,45 @@ def all_values_session(session, known_buids):
 
     Returns session_values, event_values, ordered_products_values, preference_values (tuple) ([], [], [], []
     """
-    events = shared.secure_dict_item(session, 'events')
+    events = shared.secure_dict_fetch(dict(session), 'events')
     if not events:
         return tuple(), tuple(), tuple(), tuple()
 
     # creates the lists we are going to fill and return
-    session_values = get_session_values(session, known_buids)   # fetches session values
+    session_values = get_session_values(session)  # fetches session values
     events_values = list()
     ordered_products_values = list()
     preferences_values = tuple()
 
     # selects event values for every event associated with the session. Adds them to the event value list
     for previous_events, event in enumerate(events):
-        events_values.append((get_event_values(event, session['_id'], previous_events)))
+        events_values.append((get_event_values(event, session_values[0], previous_events)))
 
     # selects order values for every order associated with the session. Adds them to the order value list
-    order = shared.secure_dict_item(session, 'order')
+    order = shared.secure_dict_fetch(session, 'order')
     if order:
-        ordered_products_values = get_order_values(order, session['_id'])
+        ordered_products_values = get_order_values(order, session_values[0])
 
-    preferences = shared.secure_dict_item(session, 'preferences')
+    preferences = shared.secure_dict_fetch(session, 'preferences')
     if preferences:
         # selects preference_category, preference and view_count or sale_count for every preference associated with
         # the session. Adds them to the preference value list.
-        # TODO: ↓ Better names! also in the sql database
+        # TODO: ↓ Think of better names! also for the preferences table in the sql database.
+        preferences_values = list()
         for category, entries in list(preferences.items()):
             entry_name, present_counter = list(entries.items())[0]
-            preferences_values = (session['_id'],
-                                  category,
-                                  entry_name,
-                                  shared.secure_dict_item(present_counter, 'views'),
-                                  shared.secure_dict_item(present_counter, 'sales'))
+            preference = (session_values[0],
+                          category,
+                          entry_name,
+                          shared.secure_dict_fetch(present_counter, 'views'),
+                          shared.secure_dict_fetch(present_counter, 'sales'))
+            preferences_values.append(preference)
 
     return session_values, events_values, ordered_products_values, preferences_values
 
 
 # upload
-def upload_session(sql_cursor, session, known_buids):
+def upload_session(session):
     """
     Takes an active sql_cursor and a session (dict) as input.
     Creates several sql queries to upload the profile data to the following sql tables:
@@ -260,42 +260,44 @@ def upload_session(sql_cursor, session, known_buids):
     Executes the sql queries.
     """
     # skips the sessions if there are no events linked to the session.
-    try:
-        events = session['events']
-    except KeyError:
+    sql_connection, sql_cursor = sql_c.connect()
+    session_value, event_value, ordered_products_value, preference_value = all_values_session(session)
+    if not session_value:
+        # TODO: raise error? maybe log it somewhere
         return None
-    # creates entry for session
-    session_query, session_values = create_session_query()
-    sql_cursor.execute(session_query, session_values)
-    session_id = session['_id']
-    # creates entries for events
-    for previous_events, event in enumerate(events):
-        create_event_query()
-    try:
-        order = session['order']
-        if order:
-            ordered_products_values = get_order_values(order, session_id)
-            order_query = create_ordered_product_query()
-    except KeyError:
-        pass
-    try:
-        preferences = session['preferences']
-        for category, entry_data in list(preferences.items()):
-            entry_name, view_count = list(entry_data.items())[0]
-            sql_cursor.execute(create_preference_query(), (session_id, category, entry_name, view_count['views']))
-    except KeyError:
-        pass
+        # uploads data to the session table
+    # creates sql_queries
+    session_query = create_session_query()
+    event_query = create_event_query()
+    ordered_products_query = create_ordered_product_query()
+    preferences_query = create_preference_query()
+
+    #uploads data to the session table
+    sql_cursor.execute(session_query, session_value)
+    # uploads data to the event table
+    psycopg2.extras.execute_batch(sql_cursor, event_query, event_value)
+
+    if ordered_products_value:
+        # uploads data to the ordered_products table
+        psycopg2.extras.execute_batch(sql_cursor, ordered_products_query, ordered_products_value)
+
+    if preference_value:
+        # uploads data to the preference table
+        psycopg2.extras.execute_batch(sql_cursor, preferences_query, preference_value)
+    sql_connection.commit()
+
+    sql_c.disconnect(sql_connection, sql_cursor)
+
+    return None
 
 
 def upload_all_sessions():
     """Loads all sessions from the local mongodb database. Uploads the sessions to the local sql database."""
-    start_time = time.time_ns()
+    start_time = time.time()
     database = mdb_c.connect_mdb()
     session_collection = database.sessions
     sql_connection, sql_cursor = sql_c.connect()
-
-    sql_cursor.execute("""SELECT buid FROM buid;""")
-    known_buids = [data[0] for data in sql_cursor.fetchall()]
+    print('busy')
 
     # creates queries for tables
     session_query = create_session_query()
@@ -303,27 +305,32 @@ def upload_all_sessions():
     ordered_products_query = create_ordered_product_query()
     preferences_query = create_preference_query()
 
-    # fetches data to put into all tables from all documents
+    # fetches data to put into all tables for all documents and loads this into the cursor
     for session_value, event_value, ordered_products_value, preference_value in iter(
-            all_values_session(session, known_buids) for session in session_collection.find()):
-        # uploads data to the session table
-        sql_cursor.execute(session_query, session_value)
-        # uploads data to the event table
-        psycopg2.extras.execute_batch(sql_cursor, event_query, event_value)
+            all_values_session(session) for session in session_collection.find()):
+        if session_value:
+            # uploads data to the session table
+            sql_cursor.execute(session_query, session_value)
+            # uploads data to the event table
+            psycopg2.extras.execute_batch(sql_cursor, event_query, event_value)
 
-        if ordered_products_value:
-            # uploads data to the ordered_products table
-            psycopg2.extras.execute_batch(sql_cursor, ordered_products_query, ordered_products_value)
+            if ordered_products_value:
+                # prints porduct_id sometimes, so I don't freak out when I don't see anything happening in the feed
+                # not everytime, so I don't freak out about the print statements affecting performance (even stupider...)
+                print(session_value[0])
+                # uploads data to the ordered_products table
+                psycopg2.extras.execute_batch(sql_cursor, ordered_products_query, ordered_products_value)
 
-        if preference_value:
-            # uploads data to the preference table
-            sql_cursor.execute(preferences_query, preference_value)
+            if preference_value:
+                # uploads data to the preference table
+                psycopg2.extras.execute_batch(sql_cursor, preferences_query, preference_value)
 
     sql_connection.commit()
+    print('\ndata is committed')
     sql_c.disconnect(sql_connection, sql_cursor)
 
-    return (time.time_ns() - start_time) / (9 * 60)
+    return time.time() - start_time
 
 
 if __name__ == '__main__':
-    print(upload_all_sessions())
+    print('upload took {}'.format(upload_all_sessions()))
