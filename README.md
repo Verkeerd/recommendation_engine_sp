@@ -17,8 +17,7 @@ You are now ready use this project.
 
 # Design
 The physical datamodel of the SQL web-shop database:
-
-![](../../Documents/VP Projects/recommendation_database.png)
+![](../../../../recommendation_database.png)
 
 I selected the data on basis of their potential usefulness; I.E. Do I think this data will help me make a decision on 
 what products to recommend to users? 
