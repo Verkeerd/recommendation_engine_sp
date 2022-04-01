@@ -25,8 +25,8 @@ def recommend_products(profile_id, amount=4):
     ((V(x, c) ∧ S(x, y)) ∨ V(y, c)) -> R(y, c) -> I(y, c)
     """
     sql_connection, sql_cursor = sql_c.connect()
-    sql_query = sql_l.recommended_products_profile_query()
 
+    sql_query = sql_l.recommended_products_profile_query()
     sql_cursor.execute(sql_query.format(profile_id))
     products = sql_cursor.fetchmany(amount)
 
